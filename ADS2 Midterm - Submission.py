@@ -8,42 +8,45 @@ RESET = "\033[0m"
 
 class SymbolTable:
     # Initialise as a dict
-    def __init__(self):
+    def __init__(self, display_steps):
         self.s_table = {}
+        self.display_steps = display_steps
 
     def insert(self, key, value):
         self.s_table.update({key: value})
-        print(f"{YELLOW}Insert key '{key}': value {value} into Symbol Table{RESET}")
+        if self.display_steps:
+            print(f"{YELLOW}SymbolTable.insert() -> {key} = {value}{RESET}")
+        print(f"Assign {key} = {value}")
 
     def search(self, key):
         if key in self.s_table:
-            print(f"{YELLOW}Search key '{key}': value {self.s_table.get(key)}{RESET}")
+            if self.display_steps:
+                print(
+                    f"{YELLOW}SymbolTable.search() -> '{key}' exists = {self.s_table.get(key)}{RESET}"
+                )
+            return self.s_table.get(key)
         else:
-            print(
-                f"{YELLOW}Search key '{key}': value {self.s_table.get(key)} *does not exist in Symbol Table*{RESET}"
-            )
+            if self.display_steps:
+                print(f"{YELLOW}SymbolTable.search() -> '{key}' does not exist{RESET}")
+            return False
 
     def delete(self, key):
         if key in self.s_table:
-            print(
-                f"{YELLOW}Delete key '{key}': value {self.s_table.get(key)} from Symbol Table{RESET}"
-            )
+            if self.display_steps:
+                print(
+                    f"{YELLOW}SymbolTable.delete() -> '{key}' = {self.s_table.get(key)}{RESET}"
+                )
             self.s_table.pop(key)
         else:
-            print(
-                f"{YELLOW}Delete key '{key}': value {self.s_table.get(key)} *does not exist in Symbol Table to begin with*{RESET}"
-            )
+            if self.display_steps:
+                print(
+                    f"{YELLOW}SymbolTable.delete() -> '{key}' does not exist in the first place{RESET}"
+                )
 
-
-# help(dict) # Useful for getting built-in methods!
-# st = SymbolTable()
-# st.insert("a", 2)
-# st.insert("b", 3)
-# st.insert("c", 4)
-# st.search("a")
-# st.search("d")
-# st.delete("a")
-# st.delete("d")
+    def display(self):
+        print(f"{YELLOW}class SymbolTable's {{key: value}} pair(s):{RESET}")
+        for key, value in self.s_table.items():
+            print(f"{YELLOW}'{key}': {value}{RESET}")
 
 
 def is_float(incoming_string):
@@ -75,9 +78,7 @@ def append_string_into_stack(
 
     # Display steps
     if display_steps:
-        print(
-            f"{YELLOW}Append into {which_stack_again}: from {old_stack} to {which_stack}{RESET}"
-        )
+        print(f"{YELLOW}{which_stack_again} = {old_stack} -> {which_stack}{RESET}")
 
 
 def assign_into_dict(incoming_alphabet, incoming_digit, assign_dict, display_steps):
@@ -115,12 +116,8 @@ def calculate_arithmetic_in_stack(incoming_symbol, which_stack, display_steps):
     if display_steps:
         print(f"{YELLOW}Do arithmetic{RESET}")
         print(
-            f"{YELLOW}Pop {value1}, pop {value2}, do {value2} {incoming_symbol} {value1}, which is {value_output}{RESET}"
+            f"{YELLOW}Pop {value1}, pop {value2}, do {value2} {incoming_symbol} {value1} = {value_output}{RESET}"
         )
-        # print(f"{YELLOW}Pop {value1} first, pop {value2} second{RESET}")
-        # print(
-        #     f"{YELLOW}Do {value2} {incoming_symbol} {value1}, which is {value_output}{RESET}"
-        # )
 
     return value_output
 
@@ -149,8 +146,8 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
     numbers_stack = []
     # Create empty array to hold alphabets (string dtype)
     alphabets_stack = []
-    # Create empty dict to hold assignments (string dtype) and its values (both integer and float dtype)
-    assignment_dict = {}
+    # Create empty symbol table
+    symbol_table = SymbolTable(display_steps)
     # Run program endlessly
     while True:
         # Prompt for user input
@@ -174,24 +171,21 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
                 append_string_into_stack(
                     term, alphabets_stack, "alphabets_stack", display_steps
                 )
-                # And check if it is an existing variable
-                for key, value in assignment_dict.items():
-                    # If term exists as variable...
-                    if term == key:
-                        # Then display key (string dtype) and its value (integer and float dtype)
-                        print(f"Variable exists: {key} = {value}")
-                        # And append its value into its array for easy "array[-1]" reference
-                        append_string_into_stack(
-                            value, numbers_stack, "numbers_stack", display_steps
-                        )
-            # If term is "=", then do assignment by updating its dict
+                # And if term is an existing variable...
+                value = symbol_table.search(term)
+                if value != False:
+                    # Then append the value into its array for easy "array[-1]" reference
+                    append_string_into_stack(
+                        value,
+                        numbers_stack,
+                        "numbers_stack",
+                        display_steps,
+                    )
+                    # Then display the key-value pair
+                    print(f"{term} = {value}")
+            # If term is "=", then call "symbol_table"'s .insert() method
             elif term == "=":
-                assign_into_dict(
-                    alphabets_stack[-1],
-                    numbers_stack[-1],
-                    assignment_dict,
-                    display_steps,
-                )
+                symbol_table.insert(alphabets_stack[-1], numbers_stack[-1])
             # If term is arithmetic symbol...
             elif (term == "+") or (term == "-") or (term == "*") or (term == "/"):
                 try:
@@ -224,7 +218,7 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
             elif (term == "/a") or (term == "/alphabets"):
                 print(f"{YELLOW}alphabets_stack = {alphabets_stack}{RESET}")
             elif (term == "/d") or (term == "/dict"):
-                print(f"{YELLOW}assignment_dict = {assignment_dict}{RESET}")
+                symbol_table.display()
             elif (term == "/q") or (term == "/quit"):
                 print(f"{YELLOW}Quitting program...{RESET}")
                 return
@@ -234,4 +228,4 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
 
 
 # Start program (param "display_steps" = False by default)
-calculate_postfix_arithmetic_with_vars(display_steps=False)
+calculate_postfix_arithmetic_with_vars(display_steps=True)

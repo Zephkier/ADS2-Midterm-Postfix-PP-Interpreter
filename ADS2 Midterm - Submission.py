@@ -127,12 +127,8 @@ def print_help_menu():
     print(
         f"\n\
 {CYAN}Useful commands{RESET}\n\
-See numbers_stack  : {YELLOW}/n{RESET} or {YELLOW}/numbers{RESET}\n\
-See alphabets_stack: {YELLOW}/a{RESET} or {YELLOW}/alphabets{RESET}\n\
-See assignment_dict: {YELLOW}/d{RESET} or {YELLOW}/dict{RESET}\n\
-\n\
-Clear both stacks: {YELLOW}/c{RESET} or {YELLOW}/clear{RESET}\n\
-Quit program     : {YELLOW}/q{RESET} or {YELLOW}/quit{RESET}\n\
+See SymbolTable: {YELLOW}/s{RESET} or {YELLOW}/symbol{RESET}\n\
+Quit program   : {YELLOW}/q{RESET} or {YELLOW}/quit{RESET}\n\
 \n\
 {CYAN}Usage examples (try copy-pasting!){RESET}\n\
 Output should be -46.0             : {YELLOW}5 40 10 / * 64 2 + -{RESET}\n\
@@ -174,6 +170,8 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
                 # And if term is an existing variable...
                 value = symbol_table.search(term)
                 if value != False:
+                    # Then display the key-value pair
+                    print(f"{term} = {value}")
                     # Then append the value into its array for easy "array[-1]" reference
                     append_string_into_stack(
                         value,
@@ -181,11 +179,14 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
                         "numbers_stack",
                         display_steps,
                     )
-                    # Then display the key-value pair
-                    print(f"{term} = {value}")
             # If term is "=", then call "symbol_table"'s .insert() method
             elif term == "=":
-                symbol_table.insert(alphabets_stack[-1], numbers_stack[-1])
+                try:
+                    symbol_table.insert(alphabets_stack[-1], numbers_stack[-1])
+                except IndexError:
+                    print(
+                        f"{RED}Error! Invalid postfix expression: {RESET}no variable or value to assign"
+                    )
             # If term is arithmetic symbol...
             elif (term == "+") or (term == "-") or (term == "*") or (term == "/"):
                 try:
@@ -193,31 +194,20 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
                     output = calculate_arithmetic_in_stack(
                         term, numbers_stack, display_steps
                     )
+                    # Display final output
+                    print(f"Result: {output}")
                     # Output is either integer or float dtype, but following function takes in string dtype only
                     append_string_into_stack(
                         output, numbers_stack, "numbers_stack", display_steps
                     )
-                    # Display final output
-                    print(f"Result: {numbers_stack[-1]}")
                 except IndexError:
                     print(
-                        f"{RED}Error! Invalid postfix expression: {RESET}not enough elements within 'numbers_stack' to 'pop' for arithmetic calculation"
+                        f"{RED}Error! Invalid postfix expression: {RESET}no element to 'pop' for arithmetic calculation"
                     )
-                    return
             # When term is a command
             elif term == "/help":
                 print_help_menu()
-            elif (term == "/c") or (term == "/clear"):
-                numbers_stack = []
-                alphabets_stack = []
-                print(f"{YELLOW}Clearing numbers_stack and alphabets_stack...{RESET}")
-                print(f"{YELLOW}numbers_stack = {numbers_stack}{RESET}")
-                print(f"{YELLOW}alphabets_stack = {alphabets_stack}{RESET}")
-            elif (term == "/n") or (term == "/numbers"):
-                print(f"{YELLOW}numbers_stack = {numbers_stack}{RESET}")
-            elif (term == "/a") or (term == "/alphabets"):
-                print(f"{YELLOW}alphabets_stack = {alphabets_stack}{RESET}")
-            elif (term == "/d") or (term == "/dict"):
+            elif (term == "/s") or (term == "/symbol"):
                 symbol_table.display()
             elif (term == "/q") or (term == "/quit"):
                 print(f"{YELLOW}Quitting program...{RESET}")
@@ -225,6 +215,11 @@ def calculate_postfix_arithmetic_with_vars(display_steps=False):
             # When term does not match anything above
             else:
                 print(f"Nothing happened, please check what you have entered")
+        # Clear stacks to keep it tidy
+        print(f"...............................")
+        print(f"(end of input, clearing stacks)")
+        numbers_stack = []
+        alphabets_stack = []
 
 
 # Start program (param "display_steps" = False by default)

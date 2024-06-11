@@ -13,16 +13,22 @@ class SymbolTable:
         self.display_steps = display_steps
 
     def insert(self, key, value):
-        self.s_table.update({key: value})
-        if self.display_steps:
-            print(f"{YELLOW}SymbolTable.insert() -> {key} = {value}{RESET}")
-        print(f"Assign {key} = {value}")
+        # Limit "key" to 1 character only, as per Task 4 "The Target Hardware"
+        if len(key) == 1:
+            self.s_table.update({key: value})
+            if self.display_steps:
+                print(f"{YELLOW}SymbolTable.insert() -> {key} = {value}{RESET}")
+            print(f"Assign {key} = {value}")
+        else:
+            print(
+                f"{RED}Error! Cannot initialise variable '{key}': {RESET}variables must be 1 character long"
+            )
 
     def search(self, key):
         if key in self.s_table:
             if self.display_steps:
                 print(
-                    f"{YELLOW}SymbolTable.search() -> '{key}' exists = {self.s_table.get(key)}{RESET}"
+                    f"{YELLOW}SymbolTable.search() -> '{key}' exists, it is assigned {self.s_table.get(key)}{RESET}"
                 )
             return self.s_table.get(key)
         else:

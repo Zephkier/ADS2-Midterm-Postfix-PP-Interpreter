@@ -1,4 +1,4 @@
-# Import for program's "/cls" and "/clear" commands
+# Import for Interpreter's "/cls" and "/clear" commands
 import os
 
 # ANSI escape codes
@@ -130,8 +130,8 @@ def return_arithmetic_calculation(value1, value2, symbol):
 
 def return_arithmetic_calculation_in_stack(incoming_symbol, which_stack, display_steps):
     # PDF brief says "3 4 +" means "3 + 4"
-    value1 = which_stack.pop()  # Pop 4 first
-    value2 = which_stack.pop()  # Pop 3 second
+    value1 = which_stack.pop()  # "Pop" 4 first
+    value2 = which_stack.pop()  # "Pop" 3 second
 
     # Then do 3 + 4 (aka. second + first)
     result = return_arithmetic_calculation(value2, value1, incoming_symbol)
@@ -149,14 +149,14 @@ def print_help_menu():
     print(
         f"\n\
 {CYAN}Useful commands{RESET}\n\
-Clear terminal : {YELLOW}/cls{RESET} or {YELLOW}/clear{RESET}\n\
-See SymbolTable: {YELLOW}/s{RESET}   or {YELLOW}/symbol{RESET}\n\
-Quit program   : {YELLOW}/q{RESET}   or {YELLOW}/quit{RESET}\n\
+Clear terminal  : {YELLOW}/cls{RESET} or {YELLOW}/clear{RESET}\n\
+See SymbolTable : {YELLOW}/s{RESET}   or {YELLOW}/symbol{RESET}\n\
+Quit Interpreter: {YELLOW}/q{RESET}   or {YELLOW}/quit{RESET}\n\
 \n\
 {CYAN}Usage examples (try copy-pasting!){RESET}\n\
-Output should be -46.0         : {YELLOW}5 40 10 / * 64 2 + -{RESET}\n\
-Output should be -65.8         : {YELLOW}5 4 100 / * 64 2 + -{RESET}\n\
-Make single-character variables: {YELLOW}a 3 = A 4 ={RESET}"
+Output should be -46.0      : {YELLOW}5 40 10 / * 64 2 + -{RESET}\n\
+Output should be -65.8      : {YELLOW}5 4 100 / * 64 2 + -{RESET}\n\
+Assign 1-character variables: {YELLOW}a 1 = A 2 = b a ={RESET}"
     )
 
 
@@ -167,13 +167,13 @@ def run_postfix_pp_interpreter(display_steps=False):
     alphabets_stack = []
     # Call class
     symbol_table = SymbolTable(display_steps)
-    # Run program endlessly
+    # Run Interpreter endlessly
     while True:
         # (Re)set "peoi_flag" to true at beginning
         print_end_of_input_flag = True
         # Notify user about Interpreter (must remove indentation for text to show properly in terminal)
         print(
-            f"\
+            f"\n\
 {BLUE}Enter {YELLOW}postfix arithmetic expression {BLUE}with (case-sensitive) variables, separated by spaces\n\
 Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
         )
@@ -181,8 +181,8 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
         initial_postfix_string = input(f"{BLUE}" + "> " + f"{RESET}")
         # Split incoming string via its spaces
         terms = initial_postfix_string.split()
-        # Go through every term in "terms" array
-        for term in terms:
+        # Go through every term in "terms" array ("i" is used when term == "=")
+        for i, term in enumerate(terms):
             # Notify user the current term
             print(f"Reading: {term}")
             # Ensure to append "term" as per its mathematical dtype
@@ -197,7 +197,7 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
                 # 1. If creating a new variable, then "symbol_table" will return False
                 if value == False:
                     # Notify user, and no need to append as it has already been done
-                    print(f"Variable '{term}' does not exist")
+                    print(f"'{term}' does not exist")
                 # 2. If calling an existing variable...
                 else:
                     # Then notify user of the key-value pair
@@ -207,7 +207,23 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
             # For arithmetic symbols
             elif term == "=":
                 try:
-                    symbol_table.insert(alphabets_stack[-1], numbers_stack[-1])
+                    # If previous term is alphabet (eg. "a b =")...
+                    if terms[i - 1].isalpha():
+                        # Then "pop" array to get "b", in which its value will be assigned to "a"
+                        get_my_value = alphabets_stack.pop()
+                        the_value = symbol_table.search(get_my_value)
+                        # "Pop" array (again) to get "a", in which it will receive value from "b"
+                        assign_to_me = alphabets_stack.pop()
+                        # If "b" has no value, then notify user and "break" out of "for" loop (better than using "continue" to stop further errors)
+                        if the_value == False:
+                            print(f"{RED}Error! Invalid variable: {RESET}'{get_my_value}' has no value to assign to anything")
+                            break
+                        # Insert variable's (new) value
+                        symbol_table.insert(assign_to_me, the_value)
+                    # Else, if it is a normal expression (eg. "a 2 ="), then insert as per normal
+                    else:
+                        # Insert variable's (new) value
+                        symbol_table.insert(alphabets_stack.pop(), numbers_stack.pop())
                 except IndexError:
                     print(f"{RED}Error! Invalid postfix expression: {RESET}no variable or value to assign")
             elif (term == "+") or (term == "-") or (term == "*") or (term == "/"):
@@ -218,8 +234,10 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
                     print(f"Result : {result}")
                     # Append result into respective array
                     append_string_into_stack(result, numbers_stack, "numbers_stack", display_steps)
+                # If cannot properly do calculation, then notify user and "break" out of "for" loop (better than using "continue" to stop further errors)
                 except IndexError:
                     print(f"{RED}Error! Invalid postfix expression: {RESET}no element to 'pop' for arithmetic calculation")
+                    break
             # For commands (during this, set "peoi_flag" to False)
             elif term == "/help":
                 print_end_of_input_flag = False
@@ -236,7 +254,7 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
                 else:
                     os.system("clear")
             elif (term == "/q") or (term == "/quit"):
-                print(f"{YELLOW}Quitting program...{RESET}")
+                print(f"{YELLOW}Quitting Postfix++ Interpreter...{RESET}")
                 return
             # When "term" does not match anything above
             else:
@@ -253,7 +271,7 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
 # Run Postfix++ Interpreter
 # @param "display_steps": boolean, refers to displaying behind-the-scene steps
 #                         default is False
-run_postfix_pp_interpreter(display_steps=True)
+run_postfix_pp_interpreter(display_steps=False)
 
 """
 In Interpreter, test these postfix expressions:

@@ -1,267 +1,300 @@
 # Import for Interpreter's "/cls" and "/clear" commands
 import os
 
+# ----- Helper code
 # ANSI escape codes
-RED = "\033[31m"
-YELLOW = "\033[33m"
 BLUE = "\033[34m"
+YELLOW = "\033[33m"
+RED = "\033[31m"
 CYAN = "\033[36m"
 RESET = "\033[0m"
+SPACE = "  "
 
 
-class SymbolTable:
-    # SymbolTable works like a dict, but "the only language structure you can use is the array"
-    # Thus, initialise as 2 arrays
-    def __init__(self, display_steps):
-        self.keys_fake_dict = []
-        self.values_fake_dict = []
-        self.display_steps = display_steps
-
-    def search(self, key):
-        # If incoming "key" exists in "keys" array...
-        if key in self.keys_fake_dict:
-            # Then get its existing index
-            found_index = self.keys_fake_dict.index(key)
-            # Notify user
-            if self.display_steps:
-                print(f"{YELLOW}SymbolTable.search() -> '{key}' exists -> {key} = {self.values_fake_dict[found_index]}{RESET}")
-            # Return that value
-            return self.values_fake_dict[found_index]
-        # Else, if incoming key does not exist in "keys" array, then notify user, and return False
-        else:
-            if self.display_steps:
-                print(f"{YELLOW}SymbolTable.search() -> '{key}' does not exist{RESET}")
-            return False
-
-    def insert(self, key, value):
-        # Limit "key" to 1 character only, as per Task 4's "The Target Hardware"
-        if len(key) == 1:
-            # If incoming "key" exists in "keys" array...
-            if key in self.keys_fake_dict:
-                # Then get its existing index
-                found_index = self.keys_fake_dict.index(key)
-                # Set the same index in "values" array to be the new "value"
-                self.values_fake_dict[found_index] = value
-            # Else, if incoming key does not exist in "keys" array, then append new "key" and "value" into respective array
-            else:
-                self.keys_fake_dict.append(key)
-                self.values_fake_dict.append(value)
-            # After successful insertion, notify user
-            if self.display_steps:
-                print(f"{YELLOW}SymbolTable.insert() -> {key} = {value}{RESET}")
-            print(f"Assign : {key} = {value}")
-        # Else, if "key" is not 1 character, then notify user
-        else:
-            print(f"{RED}Error! Cannot initialise variable '{key}': {RESET}variables must be 1 character long")
-
-    def delete(self, key):
-        # If incoming "key" exists in "keys" array...
-        if key in self.keys_fake_dict:
-            # Then get its existing index
-            found_index = self.keys_fake_dict.index(key)
-            # Notify user
-            if self.display_steps:
-                print(f"{YELLOW}SymbolTable.delete() -> '{key}' = {self.values_fake_dict[found_index]}{RESET}")
-            # "Pop" elements from both arrays at that same index
-            self.keys_fake_dict.pop(found_index)
-            self.values_fake_dict.pop(found_index)
-        # Else, if incoming "key" does not exist in "keys" array, then notify user
-        else:
-            if self.display_steps:
-                print(f"{YELLOW}SymbolTable.delete() -> '{key}' does not exist in the first place{RESET}")
-
-    def display(self):
-        print(f"{YELLOW}class SymbolTable's variable assignment pair(s):{RESET}")
-        # Go through every element in "keys" array, and print both array's elements
-        for i in range(len(self.keys_fake_dict)):
-            print(f"{YELLOW}{self.keys_fake_dict[i]} = {self.values_fake_dict[i]}{RESET}")
-
-
-# Although there is ".isdigit()" method, it returns False for negative integers. Thus, this custom function
-def is_integer(incoming_string):
+# Although there is ".isdigit()" method, it returns False for negative integer strings
+# This ensures both positive and negative integer strings are correctly filtered
+# At this point, all 3 integer/float/string dtypes can come through
+def is_integer(input_string):
     try:
-        int(incoming_string)
+        int(input_string)
         return True
     except:
         return False
 
 
-# There is no ".isfloat()" method. Thus, this custom function
-def is_float(incoming_string):
+# There is no ".isfloat()" method, thus, this custom function
+# At this point, either float/string dtypes should come through
+def is_float(input_string):
     try:
-        # At this point, integer dtype should be filtered, so left with either float or string dtype
-        float(incoming_string)
+        float(input_string)
         return True
     except:
         return False
 
 
-# This function only takes in string dtype, and will filter according to mathematical dtype
-def append_string_into_stack(incoming_string, which_stack, which_stack_again, display_steps):
-    # Store copy of current stack for printing before-and-after at the end of this function
-    old_stack = which_stack.copy()
+def append_into_stack(input_string, output_stack, output_stack_name, show_steps):
+    # Store pre-append copy to compare before and after at the end
+    old_stack = output_stack.copy()
 
-    # Standardise "incoming_string" dtype, in case another dtype is passed in
-    standardised_incoming = str(incoming_string)
+    # Standardise input's dtype, in case another dtype is passed in
+    standardised_incoming = str(input_string)
 
-    # Append into respective arrays depending dtype
+    # Set input according to its dtype and append
     if is_integer(standardised_incoming):
-        which_stack.append(int(standardised_incoming))
+        output_stack.append(int(standardised_incoming))
     elif is_float(standardised_incoming):
-        which_stack.append(float(standardised_incoming))
+        output_stack.append(float(standardised_incoming))
     elif standardised_incoming.isalpha():
-        which_stack.append(str(standardised_incoming))
+        output_stack.append(str(standardised_incoming))
 
-    # Display steps
-    if display_steps:
-        print(f"{YELLOW}{which_stack_again} = {old_stack} -> {which_stack}{RESET}")
+    # Notify before and after
+    if show_steps:
+        print(f"{SPACE}{YELLOW}{output_stack_name} = {old_stack} -> {output_stack}{RESET}")
 
 
 def return_arithmetic_calculation(value1, value2, symbol):
     if symbol == "+":
         return value1 + value2
-    if symbol == "-":
+    elif symbol == "-":
         return value1 - value2
-    if symbol == "*":
+    elif symbol == "*":
         return value1 * value2
-    if symbol == "/":
+    elif symbol == "/":
         return value1 / value2
 
 
-def return_arithmetic_calculation_in_stack(incoming_symbol, which_stack, display_steps):
-    # PDF brief says "3 4 +" means "3 + 4"
-    value1 = which_stack.pop()  # "Pop" 4 first
-    value2 = which_stack.pop()  # "Pop" 3 second
+def return_calculation_in_stack(input_symbol, output_stack, show_steps):
+    # Midterm requirements said "3 4 +" means "3 + 4"
+    first = output_stack.pop()  # Pop 4 first
+    second = output_stack.pop()  # Pop 3 second
 
-    # Then do 3 + 4 (aka. second + first)
-    result = return_arithmetic_calculation(value2, value1, incoming_symbol)
+    # "3 + 4" = "second + first"
+    result = return_arithmetic_calculation(second, first, input_symbol)
 
-    # Display steps
-    if display_steps:
-        print(f"{YELLOW}Calculate arithmetic{RESET}")
-        print(f"{YELLOW}Pop {value1}, pop {value2}, do {value2} {incoming_symbol} {value1} = {result}{RESET}")
+    # Notify steps
+    if show_steps:
+        print(f"{SPACE}{YELLOW}Calculate arithmetic{RESET}")
+        print(f"{SPACE}{YELLOW}Pop {first}, pop {second}{RESET}")
+        print(f"{SPACE}{YELLOW}Do {second} {input_symbol} {first}, get {result}{RESET}")
 
     return result
 
 
 def print_help_menu():
-    # Must remove indentation for text to show properly in terminal
-    print(
-        f"\n\
-{CYAN}Useful commands{RESET}\n\
-Clear terminal  : {YELLOW}/cls{RESET} or {YELLOW}/clear{RESET}\n\
-See SymbolTable : {YELLOW}/s{RESET}   or {YELLOW}/symbol{RESET}\n\
-Quit Interpreter: {YELLOW}/q{RESET}   or {YELLOW}/quit{RESET}\n\
-\n\
-{CYAN}Usage examples (try copy-pasting!){RESET}\n\
-Output should be -46.0      : {YELLOW}5 40 10 / * 64 2 + -{RESET}\n\
-Output should be -65.8      : {YELLOW}5 4 100 / * 64 2 + -{RESET}\n\
-Assign 1-character variables: {YELLOW}a 1 = A 2 = b a ={RESET}"
-    )
+    print()
+    print(f"{CYAN}Useful commands{RESET}")
+    print(f"Clear terminal  : {YELLOW}/cls {RESET}or {YELLOW}/clear{RESET}")
+    print(f"See SymbolTable : {YELLOW}/s   {RESET}or {YELLOW}/symbol{RESET}")
+    print(f"Quit Interpreter: {YELLOW}/q   {RESET}or {YELLOW}/quit{RESET}")
+    print()
+    print(f"{CYAN}Examples (try copy-paste!){RESET}")
+    print(f"Output is -65.8: {YELLOW}5 4 100 / * 64 2 + -{RESET}")
+    print(f"Assign vars 1  : {YELLOW}A 1 = B 2 ={RESET}")
+    print(f"Assign vars 2  : {YELLOW}A 3 = C A ={RESET}")
+    print(f"Use vars       : {YELLOW}A B C + +{RESET}")
 
 
-def run_postfix_pp_interpreter(display_steps=False):
-    # To hold numbers (both integer and float dtype)
+# ----- Implementation code
+class SymbolTable:
+    # This class works like a dict, but Midterm requirements said, "the only language structure you can use is the array"
+    # Thus, create 2 arrays
+    def __init__(self, show_steps):
+        self.keys = []
+        self.values = []
+        self.show_steps = show_steps
+
+    # Returns a value or False
+    def search(self, key):
+        # If "key" does not exist
+        if key not in self.keys:
+            if self.show_steps:
+                print(f"{SPACE}{YELLOW}SymbolTable.search('{key}') -> does not exist{RESET}")
+            return False
+        # If "key" exists
+        else:
+            # Get corresponding index
+            index = self.keys.index(key)
+            if self.show_steps:
+                print(f"{SPACE}{YELLOW}SymbolTable.search('{key}') -> exists -> get value{RESET}")
+            # Return corresponding value
+            return self.values[index]
+
+    # Does not return anything
+    def insert(self, key, value):
+        # Create new variable
+        if key not in self.keys:
+            self.keys.append(key)
+            self.values.append(value)
+            if self.show_steps:
+                print(f"{SPACE}{YELLOW}SymbolTable.insert('{key}', {value}) -> create new var{RESET}")
+        # Overwrite existing variable
+        else:
+            # Get corresponding index
+            index = self.keys.index(key)
+            # Overwrite at that index
+            self.values[index] = value
+            # Notify accordingly
+            if self.show_steps:
+                print(f"{SPACE}{YELLOW}SymbolTable.insert('{key}', {value}) -> overwrite var{RESET}")
+        # Notify always
+        print(f"Assign : {key} = {value}")
+
+    # Does not return anything
+    def delete(self, key):
+        # Delete existing variable
+        if key in self.keys:
+            # Get corresponding index
+            index = self.keys.index(key)
+            # Notify user
+            if self.show_steps:
+                print(f"{YELLOW}SymbolTable.delete() -> '{key}' = {self.values[index]}{RESET}")
+            # Pop both arrays at same index
+            self.keys.pop(index)
+            self.values.pop(index)
+        # If incoming “key” does not exist in its array, then notify user
+        else:
+            if self.show_steps:
+                print(f"{YELLOW}SymbolTable.delete() -> '{key}' does not exist in the first place{RESET}")
+
+    # Does not return anything # TODO add sorting algo.
+    def display(self):
+        print(f"\n{CYAN}class SymbolTable's key-value (variable assignment) pairs:{RESET}")
+        for i in range(0, len(self.keys)):
+            print(f"{SPACE}{self.keys[i]} = {self.values[i]}")
+
+
+def run_postfix_pp_interpreter(show_steps=False):
+    # Holds integer and float dtypes
     numbers_stack = []
-    # To hold alphabets (string dtype)
+
+    # Holds string dtype
     alphabets_stack = []
+
     # Call class
-    symbol_table = SymbolTable(display_steps)
+    symbol_table = SymbolTable(show_steps)
+
+    # Notify intro
+    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("~~~~~ Starting Postfix++ Interpreter ~~~~~")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+    # Aesthetic reasons (lb_flag is True initially, False upon "/cls" or "/clear")
+    line_break_flag = True
+
     # Run Interpreter endlessly
     while True:
-        # (Re)set "peoi_flag" to true at beginning
-        print_end_of_input_flag = True
-        # Notify user about Interpreter (must remove indentation for text to show properly in terminal)
-        print(
-            f"\n\
-{BLUE}Enter {YELLOW}postfix arithmetic expression {BLUE}with (case-sensitive) variables, separated by spaces\n\
-Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
-        )
+        # (Re)Set eoi_flag to True
+        end_of_input_flag = True
+
+        # Aesthetic reasons for "Notify rules" below
+        if line_break_flag:
+            # Upon anything other than "/cls" or "/clear", do line break
+            print()
+        else:
+            # Upon "/cls" or "/clear", no line break, just reset lb_flag to True
+            line_break_flag = True
+
+        # Notify rules
+        print(f"{BLUE}Enter {YELLOW}postfix arithmetic expression {BLUE}with uppercase variables (all terms separated by spaces){RESET}")
+        print(f"{BLUE}Enter {YELLOW}/help {BLUE}for commands and examples{RESET}")
+
         # Prompt for user input
-        initial_postfix_string = input(f"{BLUE}" + "> " + f"{RESET}")
-        # Split incoming string via its spaces
-        terms = initial_postfix_string.split()
-        # Go through every term in "terms" array ("i" is used when term == "=")
+        user_input_string = input(f"{BLUE}> {RESET}")
+        print()
+
+        # Split string by its spaces
+        terms = user_input_string.split()
+
+        # Go through every term (and its index) within "terms"
         for i, term in enumerate(terms):
-            # Notify user the current term
             print(f"Reading: {term}")
-            # Ensure to append "term" as per its mathematical dtype
-            # Ensure to always append for easy reference using "[-1]"
+
             if is_integer(term) or is_float(term):
-                append_string_into_stack(term, numbers_stack, "numbers_stack", display_steps)
+                append_into_stack(term, numbers_stack, "numbers_stack", show_steps)
+
             elif term.isalpha():
-                append_string_into_stack(term, alphabets_stack, "alphabets_stack", display_steps)
-                # Get "term"'s value
+                # Ensure criteria is met as per Midterm requirements
+                if (len(term) != 1) or (term.islower()):
+                    print(f"{RED}Error! Variable name {RESET}'{term}' {RED}must be 1 uppercase character!{RESET}")
+                    break
+                append_into_stack(term, alphabets_stack, "alphabets_stack", show_steps)
+                # Check term's existence (returns a value or False)
                 value = symbol_table.search(term)
-                # This has 2 possibilities
-                # 1. If creating a new variable, then "symbol_table" will return False
                 if value == False:
-                    # Notify user, and no need to append as it has already been done
+                    # Notify (lack of) existence
                     print(f"'{term}' does not exist")
-                # 2. If calling an existing variable...
                 else:
-                    # Then notify user of the key-value pair
+                    # Notify existence
                     print(f"{term} = {value}")
-                    # In event user wants to use variable, append value into respective array
-                    append_string_into_stack(value, numbers_stack, "numbers_stack", display_steps)
-            # For arithmetic symbols
+                    # Append term's value for potential usage
+                    append_into_stack(value, numbers_stack, "numbers_stack", show_steps)
+
+            elif term in ["+", "-", "*", "/"]:
+                try:
+                    result = return_calculation_in_stack(term, numbers_stack, show_steps)
+                    # Notify result
+                    print(f"Result : {result}")
+                    append_into_stack(result, numbers_stack, "numbers_stack", show_steps)
+                except IndexError:
+                    print(f"{RED}Error! No element to 'pop' for arithmetic calculation!{RESET}")
+                    break
+                except ZeroDivisionError:
+                    print(f"{RED}Error! Cannot divide by zero!{RESET}")
+                    break
+
             elif term == "=":
                 try:
-                    # If previous term is alphabet (eg. "a b =")...
-                    if terms[i - 1].isalpha():
-                        # Then "pop" array to get "b", in which its value will be assigned to "a"
-                        get_my_value = alphabets_stack.pop()
-                        the_value = symbol_table.search(get_my_value)
-                        # "Pop" array (again) to get "a", in which it will receive value from "b"
-                        assign_to_me = alphabets_stack.pop()
-                        # If "b" has no value, then notify user and "break" out of "for" loop (better than using "continue" to stop further errors)
-                        if the_value == False:
-                            print(f"{RED}Error! Invalid variable: {RESET}'{get_my_value}' has no value to assign to anything")
-                            break
-                        # Insert variable's (new) value
-                        symbol_table.insert(assign_to_me, the_value)
-                    # Else, if it is a normal expression (eg. "a 2 ="), then insert as per normal
+                    # Do var-to-value assignment (eg. "B 1 =")
+                    if not terms[i - 1].isalpha():
+                        print(f"{SPACE}{YELLOW}Do assignment (var-to-value){RESET}")
+                        value = numbers_stack.pop()
+                        var = alphabets_stack.pop()
+                        symbol_table.insert(var, value)
+                    # Do var-to-var assignment (eg. "A B =", A is assignee, B is assigner)
                     else:
-                        # Insert variable's (new) value
-                        symbol_table.insert(alphabets_stack.pop(), numbers_stack.pop())
-                except IndexError:
-                    print(f"{RED}Error! Invalid postfix expression: {RESET}no variable or value to assign")
-            elif (term == "+") or (term == "-") or (term == "*") or (term == "/"):
-                try:
-                    # Do arithmetic calculation
-                    result = return_arithmetic_calculation_in_stack(term, numbers_stack, display_steps)
-                    # Display result
-                    print(f"Result : {result}")
-                    # Append result into respective array
-                    append_string_into_stack(result, numbers_stack, "numbers_stack", display_steps)
-                # If cannot properly do calculation, then notify user and "break" out of "for" loop (better than using "continue" to stop further errors)
-                except IndexError:
-                    print(f"{RED}Error! Invalid postfix expression: {RESET}no element to 'pop' for arithmetic calculation")
+                        print(f"{SPACE}{YELLOW}Do assignment (var-to-var){RESET}")
+                        # Get assigner and assignee
+                        assigner = alphabets_stack.pop()
+                        assignee = alphabets_stack.pop()
+                        # Assigner should already exist (returns a value or False)
+                        assigner_value = symbol_table.search(assigner)
+                        if assigner_value != False:
+                            symbol_table.insert(assignee, assigner_value)
+                        else:
+                            print(f"{RED}Error! Assigner variable has no value to assign!{RESET}")
+                            break
+                except:
+                    print(f"{RED}Error! No variable or value to assign!{RESET}")
                     break
-            # For commands (during this, set "peoi_flag" to False)
+
+            # During commands, set eoi_flag to False
             elif term == "/help":
-                print_end_of_input_flag = False
+                end_of_input_flag = False
                 print_help_menu()
-            elif (term == "/s") or (term == "/symbol"):
-                print_end_of_input_flag = False
+            elif term in ["/s", "/symbol"]:
+                end_of_input_flag = False
                 symbol_table.display()
-            elif (term == "/cls") or (term == "/clear"):
-                print_end_of_input_flag = False
-                # For Windows
+            elif term in ["/cls", "/clear"]:  # Set lb_flag to False too
+                end_of_input_flag = False
+                line_break_flag = False
                 if os.name == "nt":
-                    os.system("cls")
-                # For non-Windows
+                    os.system("cls")  # Windows
                 else:
-                    os.system("clear")
-            elif (term == "/q") or (term == "/quit"):
-                print(f"{YELLOW}Quitting Postfix++ Interpreter...{RESET}")
+                    os.system("clear")  # Non-Windows
+            elif term in ["/q", "/quit"]:
+                print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                print("~~~~~ Exiting Postfix++ Interpreter ~~~~~")
+                print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 return
-            # When "term" does not match anything above
+
+            # When "term" does not match anything
             else:
-                print_end_of_input_flag = False
-                print(f"Nothing happened, please check what you have entered")
-        # Clear arrays to keep "display_steps" tidy
-        if print_end_of_input_flag:
+                end_of_input_flag = False
+                print(f"{RED}Invalid term, check what you have entered!{RESET}")
+                break
+
+        # Clear arrays once done reading user input
+        if end_of_input_flag:
             print(f"...............................")
             print(f"(end of input, clearing stacks)")
             numbers_stack = []
@@ -269,16 +302,5 @@ Enter {YELLOW}/help {BLUE}for commands and examples{RESET}"
 
 
 # Run Postfix++ Interpreter
-# @param "display_steps": boolean, refers to displaying behind-the-scene steps
-#                         default is False
-run_postfix_pp_interpreter(display_steps=False)
-
-"""
-In Interpreter, test these postfix expressions:
-Expression    Reason
-*in /help*    Normal programming
-2 5 + +       See error for invalid expression
-ab 12 =       See error for invalid assignment
-1 =           See error for invalid assignment
-=             See error for invalid assignment
-"""
+# @param show_steps: boolean, default False, refers to displaying workings and steps
+run_postfix_pp_interpreter()

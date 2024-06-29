@@ -80,21 +80,22 @@ def return_calculation_in_stack(input_symbol, output_stack, show_steps):
 
 def print_help_menu():
     print()
-    print(f"{CYAN}Useful commands{RESET}")
-    print(f"See SymbolTable (sorted by 'keys')  : {YELLOW}/s     {RESET}or {YELLOW}/symbol{RESET}")
-    print(f"                                    : {YELLOW}/s-key {RESET}or {YELLOW}/symbol-key{RESET}")
-    print(f"                                    : {YELLOW}/s-var {RESET}or {YELLOW}/symbol-var{RESET}")
-    print(f"See SymbolTable (sorted by 'values'): {YELLOW}/s-val {RESET}or {YELLOW}/symbol-val{RESET}")
-    print()
-    print(f"Clear terminal  : {YELLOW}/cls {RESET}or {YELLOW}/clear{RESET}")
-    print(f"Quit Interpreter: {YELLOW}/q   {RESET}or {YELLOW}/quit{RESET}")
-    print()
     print(f"{CYAN}Examples (try copy-paste!){RESET}")
     print(f"Output is -65.8: {YELLOW}5 4 100 / * 64 2 + -{RESET}")
-    print(f"Assign vars 1  : {YELLOW}A 1 = B 2 ={RESET}")
-    print(f"Assign vars 2  : {YELLOW}A 3 = C A ={RESET}")
+    print(f"Assign vars (1): {YELLOW}A 1 = B 2 ={RESET}")
+    print(f"Assign vars (2): {YELLOW}A 3 = C A ={RESET}")
     print(f"Use vars       : {YELLOW}A B C + +{RESET}")
     print(f"Test sorting   : {YELLOW}D 41 = A 50.1 = F -36 = C 0.01 = B 50 = G -36.1 = E 1 ={RESET}")
+    print()
+    print(f"{CYAN}SymbolTable commands{RESET}")
+    print(f"See SymbolTable (sort by 'keys') (1): {YELLOW}/s     {RESET}or {YELLOW}/symbol{RESET}")
+    print(f"                                 (2): {YELLOW}/s-key {RESET}or {YELLOW}/symbol-key{RESET}")
+    print(f"                                 (3): {YELLOW}/s-var {RESET}or {YELLOW}/symbol-var{RESET}")
+    print(f"See SymbolTable (sort by 'values')  : {YELLOW}/s-val {RESET}or {YELLOW}/symbol-val{RESET}")
+    print()
+    print(f"{CYAN}General commands{RESET}")
+    print(f"Clear terminal  : {YELLOW}/cls {RESET}or {YELLOW}/clear{RESET}")
+    print(f"Quit Interpreter: {YELLOW}/q   {RESET}or {YELLOW}/quit{RESET}")
 
 
 # ----- Implementation code
@@ -139,23 +140,7 @@ class SymbolTable:
             if self.show_steps:
                 print(f"{SPACE}{YELLOW}SymbolTable.insert('{key}', {value}) -> overwrite var{RESET}")
 
-    # Does not return anything # FIXME not implemented at all
-    def delete(self, key):
-        # Delete existing variable
-        if key in self.keys:
-            # Get corresponding index
-            index = self.keys.index(key)
-            if self.show_steps:
-                print(f"{YELLOW}SymbolTable.delete() -> '{key}' = {self.values[index]}{RESET}")
-            # Pop both arrays at same index
-            self.keys.pop(index)
-            self.values.pop(index)
-        else:
-            if self.show_steps:
-                print(f"{YELLOW}SymbolTable.delete() -> '{key}' does not exist in the first place{RESET}")
-
-    # Does not return anything
-    # Default = sorts by keys
+    # Does not return anything (default = sort by keys)
     # https://www.youtube.com/watch?v=cVZMah9kEjI
     def merge_sort(self, keys, values, sort_by_keys=True):
         if len(keys) > 1:
@@ -174,14 +159,14 @@ class SymbolTable:
             j = 0  # Index of array R
             k = 0  # Index of array_merged
 
-            # Merge sorted halves back into original array
+            # Merge sorted halves back into array_merged
             while i < len(keys_L) and j < len(keys_R):
-                # Compare L's and R's elements
                 # Check if sorting by keys or values
+                # Compare L's and R's elements
                 # Put smaller element into array_merged
 
                 # When (L < R)
-                if (keys_L[i] < keys_R[j] and sort_by_keys) or (values_L[i] < values_R[j] and not sort_by_keys):
+                if (sort_by_keys and keys_L[i] < keys_R[j]) or (not sort_by_keys and values_L[i] < values_R[j]):
                     keys[k] = keys_L[i]
                     values[k] = values_L[i]
                     i += 1
@@ -208,19 +193,25 @@ class SymbolTable:
 
     # Does not return anything
     def display_and_sort(self, sort_by="keys"):
-        # Default = sorts by keys
+        # Default = sort by keys
         if sort_by == "keys":
             sort_by_keys = True
         else:
             sort_by_keys = False
         self.merge_sort(self.keys, self.values, sort_by_keys)
-
         print(f"\n{CYAN}class SymbolTable's key-value (variable assignment) pairs, sorted by '{sort_by}':{RESET}")
-        for i in range(0, len(self.keys)):
+        for i in range(len(self.keys)):
             print(f"{SPACE}{self.keys[i]} = {self.values[i]}")
 
 
 def run_postfix_pp_interpreter(show_steps=False):
+    """
+    Run the Postfix++ Interpreter
+
+    Args:
+        show_steps (bool, optional): Show workings and steps. Defaults to False.
+    """
+
     # Holds integer and float dtypes
     numbers_stack = []
 
@@ -253,7 +244,7 @@ def run_postfix_pp_interpreter(show_steps=False):
 
         # Notify rules
         print(f"{BLUE}Enter {YELLOW}postfix arithmetic expression {BLUE}with uppercase variables (all terms separated by spaces){RESET}")
-        print(f"{BLUE}Enter {YELLOW}/help {BLUE}for commands and examples{RESET}")
+        print(f"{BLUE}Enter {YELLOW}/help {BLUE}for examples and commands{RESET}")
 
         # Prompt for user input
         user_input_string = input(f"{BLUE}> {RESET}")
@@ -334,12 +325,15 @@ def run_postfix_pp_interpreter(show_steps=False):
             elif term == "/help":
                 end_of_input_flag = False
                 print_help_menu()
+
             elif term in ["/s-key", "/symbol-key", "/s", "/symbol", "/s-var", "/symbol-var"]:
                 end_of_input_flag = False
                 symbol_table.display_and_sort(sort_by="keys")
+
             elif term in ["/s-val", "/symbol-val"]:
                 end_of_input_flag = False
                 symbol_table.display_and_sort(sort_by="values")
+
             elif term in ["/cls", "/clear"]:  # Set lb_flag to False too
                 end_of_input_flag = False
                 line_break_flag = False
@@ -347,6 +341,7 @@ def run_postfix_pp_interpreter(show_steps=False):
                     os.system("cls")  # Windows
                 else:
                     os.system("clear")  # Non-Windows
+
             elif term in ["/q", "/quit"]:
                 print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 print("~~~~~ Exiting Postfix++ Interpreter ~~~~~")
@@ -367,6 +362,4 @@ def run_postfix_pp_interpreter(show_steps=False):
             alphabets_stack = []
 
 
-# Run Postfix++ Interpreter
-# @param show_steps: boolean, default = False, refers to displaying workings and steps
-run_postfix_pp_interpreter(show_steps=True)
+run_postfix_pp_interpreter(show_steps=False)

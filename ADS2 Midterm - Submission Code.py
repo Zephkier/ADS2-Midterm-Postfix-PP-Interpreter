@@ -47,7 +47,6 @@ def append_into_stack(input_string, output_stack, output_stack_name, show_steps)
     elif standardised_incoming.isalpha():
         output_stack.append(str(standardised_incoming))
 
-    # Notify before and after
     if show_steps:
         print(f"{SPACE}{YELLOW}{output_stack_name} = {old_stack} -> {output_stack}{RESET}")
 
@@ -64,14 +63,13 @@ def return_arithmetic_calculation(value1, value2, symbol):
 
 
 def return_calculation_in_stack(input_symbol, output_stack, show_steps):
-    # Midterm requirements said "3 4 +" means "3 + 4"
+    # Midterm requirements: "3 4 +" means "3 + 4"
     first = output_stack.pop()  # Pop 4 first
     second = output_stack.pop()  # Pop 3 second
 
     # "3 + 4" = "second + first"
     result = return_arithmetic_calculation(second, first, input_symbol)
 
-    # Notify steps
     if show_steps:
         print(f"{SPACE}{YELLOW}Calculate arithmetic{RESET}")
         print(f"{SPACE}{YELLOW}Pop {first}, pop {second}{RESET}")
@@ -83,8 +81,12 @@ def return_calculation_in_stack(input_symbol, output_stack, show_steps):
 def print_help_menu():
     print()
     print(f"{CYAN}Useful commands{RESET}")
+    print(f"See SymbolTable (sorted by 'keys')  : {YELLOW}/s     {RESET}or {YELLOW}/symbol{RESET}")
+    print(f"                                    : {YELLOW}/s-key {RESET}or {YELLOW}/symbol-key{RESET}")
+    print(f"                                    : {YELLOW}/s-var {RESET}or {YELLOW}/symbol-var{RESET}")
+    print(f"See SymbolTable (sorted by 'values'): {YELLOW}/s-val {RESET}or {YELLOW}/symbol-val{RESET}")
+    print()
     print(f"Clear terminal  : {YELLOW}/cls {RESET}or {YELLOW}/clear{RESET}")
-    print(f"See SymbolTable : {YELLOW}/s   {RESET}or {YELLOW}/symbol{RESET}")
     print(f"Quit Interpreter: {YELLOW}/q   {RESET}or {YELLOW}/quit{RESET}")
     print()
     print(f"{CYAN}Examples (try copy-paste!){RESET}")
@@ -92,11 +94,12 @@ def print_help_menu():
     print(f"Assign vars 1  : {YELLOW}A 1 = B 2 ={RESET}")
     print(f"Assign vars 2  : {YELLOW}A 3 = C A ={RESET}")
     print(f"Use vars       : {YELLOW}A B C + +{RESET}")
+    print(f"Test sorting   : {YELLOW}D 41 = A 50.1 = F -36 = C 0.01 = B 50 = G -36.1 = E 1 ={RESET}")
 
 
 # ----- Implementation code
 class SymbolTable:
-    # This class works like a dict, but Midterm requirements said, "the only language structure you can use is the array"
+    # Works like a dictionary but Midterm requirements: "only language structure you can use is the array"
     # Thus, create 2 arrays
     def __init__(self, show_steps):
         self.keys = []
@@ -133,32 +136,86 @@ class SymbolTable:
             index = self.keys.index(key)
             # Overwrite at that index
             self.values[index] = value
-            # Notify accordingly
             if self.show_steps:
                 print(f"{SPACE}{YELLOW}SymbolTable.insert('{key}', {value}) -> overwrite var{RESET}")
-        # Notify always
-        print(f"Assign : {key} = {value}")
 
-    # Does not return anything
+    # Does not return anything # FIXME not implemented at all
     def delete(self, key):
         # Delete existing variable
         if key in self.keys:
             # Get corresponding index
             index = self.keys.index(key)
-            # Notify user
             if self.show_steps:
                 print(f"{YELLOW}SymbolTable.delete() -> '{key}' = {self.values[index]}{RESET}")
             # Pop both arrays at same index
             self.keys.pop(index)
             self.values.pop(index)
-        # If incoming “key” does not exist in its array, then notify user
         else:
             if self.show_steps:
                 print(f"{YELLOW}SymbolTable.delete() -> '{key}' does not exist in the first place{RESET}")
 
-    # Does not return anything # TODO add sorting algo.
-    def display(self):
-        print(f"\n{CYAN}class SymbolTable's key-value (variable assignment) pairs:{RESET}")
+    # Does not return anything
+    # Default = sorts by keys
+    # https://www.youtube.com/watch?v=cVZMah9kEjI
+    def merge_sort(self, keys, values, sort_by_keys=True):
+        if len(keys) > 1:
+            # Get midpoint to split array into half
+            mid = len(keys) // 2
+            keys_L = keys[:mid]
+            keys_R = keys[mid:]
+            values_L = values[:mid]
+            values_R = values[mid:]
+
+            # Recursive call to split array till it has 1 element to do merge sort
+            self.merge_sort(keys_L, values_L, sort_by_keys)
+            self.merge_sort(keys_R, values_R, sort_by_keys)
+
+            i = 0  # Index of array L
+            j = 0  # Index of array R
+            k = 0  # Index of array_merged
+
+            # Merge sorted halves back into original array
+            while i < len(keys_L) and j < len(keys_R):
+                # Compare L's and R's elements
+                # Check if sorting by keys or values
+                # Put smaller element into array_merged
+
+                # When (L < R)
+                if (keys_L[i] < keys_R[j] and sort_by_keys) or (values_L[i] < values_R[j] and not sort_by_keys):
+                    keys[k] = keys_L[i]
+                    values[k] = values_L[i]
+                    i += 1
+                # When (R < L) or (R == L)
+                else:
+                    keys[k] = keys_R[j]
+                    values[k] = values_R[j]
+                    j += 1
+                k += 1
+
+            # Add L's remaining elements into array_merged
+            while i < len(keys_L):
+                keys[k] = keys_L[i]
+                values[k] = values_L[i]
+                i += 1
+                k += 1
+
+            # Add R's remaining elements into array_merged
+            while j < len(keys_R):
+                keys[k] = keys_R[j]
+                values[k] = values_R[j]
+                j += 1
+                k += 1
+
+    # Does not return anything
+    def display_and_sort(self, sort_by="keys"):
+        # Default = sorts by keys
+        if sort_by == "keys":
+            sort_by_keys = True
+        else:
+            sort_by_keys = False
+        self.merge_sort(self.keys, self.values, sort_by_keys)
+
+        print(f"\n{CYAN}class SymbolTable's key-value (variable assignment) pairs, sorted by '{sort_by}':{RESET}")
         for i in range(0, len(self.keys)):
             print(f"{SPACE}{self.keys[i]} = {self.values[i]}")
 
@@ -213,7 +270,7 @@ def run_postfix_pp_interpreter(show_steps=False):
                 append_into_stack(term, numbers_stack, "numbers_stack", show_steps)
 
             elif term.isalpha():
-                # Ensure criteria is met as per Midterm requirements
+                # Midterm requirements: "variable namespace 'A'-'Z'"
                 if (len(term) != 1) or (term.islower()):
                     print(f"{RED}Error! Variable name {RESET}'{term}' {RED}must be 1 uppercase character!{RESET}")
                     break
@@ -246,13 +303,17 @@ def run_postfix_pp_interpreter(show_steps=False):
                 try:
                     # Do var-to-value assignment (eg. "B 1 =")
                     if not terms[i - 1].isalpha():
-                        print(f"{SPACE}{YELLOW}Do assignment (var-to-value){RESET}")
+                        if show_steps:
+                            print(f"{SPACE}{YELLOW}Do assignment (var-to-value){RESET}")
                         value = numbers_stack.pop()
                         var = alphabets_stack.pop()
                         symbol_table.insert(var, value)
+                        # Notify assignment
+                        print(f"Assign : {var} = {value}")
                     # Do var-to-var assignment (eg. "A B =", A is assignee, B is assigner)
                     else:
-                        print(f"{SPACE}{YELLOW}Do assignment (var-to-var){RESET}")
+                        if show_steps:
+                            print(f"{SPACE}{YELLOW}Do assignment (var-to-var){RESET}")
                         # Get assigner and assignee
                         assigner = alphabets_stack.pop()
                         assignee = alphabets_stack.pop()
@@ -260,6 +321,8 @@ def run_postfix_pp_interpreter(show_steps=False):
                         assigner_value = symbol_table.search(assigner)
                         if assigner_value != False:
                             symbol_table.insert(assignee, assigner_value)
+                            # Notify assignment
+                            print(f"Assign : {assignee} = {assigner_value}")
                         else:
                             print(f"{RED}Error! Assigner variable has no value to assign!{RESET}")
                             break
@@ -271,9 +334,12 @@ def run_postfix_pp_interpreter(show_steps=False):
             elif term == "/help":
                 end_of_input_flag = False
                 print_help_menu()
-            elif term in ["/s", "/symbol"]:
+            elif term in ["/s-key", "/symbol-key", "/s", "/symbol", "/s-var", "/symbol-var"]:
                 end_of_input_flag = False
-                symbol_table.display()
+                symbol_table.display_and_sort(sort_by="keys")
+            elif term in ["/s-val", "/symbol-val"]:
+                end_of_input_flag = False
+                symbol_table.display_and_sort(sort_by="values")
             elif term in ["/cls", "/clear"]:  # Set lb_flag to False too
                 end_of_input_flag = False
                 line_break_flag = False
@@ -295,12 +361,12 @@ def run_postfix_pp_interpreter(show_steps=False):
 
         # Clear arrays once done reading user input
         if end_of_input_flag:
-            print(f"...............................")
+            print(f"-------------------------------")
             print(f"(end of input, clearing stacks)")
             numbers_stack = []
             alphabets_stack = []
 
 
 # Run Postfix++ Interpreter
-# @param show_steps: boolean, default False, refers to displaying workings and steps
-run_postfix_pp_interpreter()
+# @param show_steps: boolean, default = False, refers to displaying workings and steps
+run_postfix_pp_interpreter(show_steps=True)

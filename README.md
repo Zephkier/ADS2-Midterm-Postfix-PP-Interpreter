@@ -14,7 +14,7 @@ You may refer to `requirements.txt` to get the exact same dependencies.
 
 Open the terminal to this directory:
 
-![Screenshot of terminal accessing this directory](https://github.com/user-attachments/assets/af55882d-14e9-4753-987a-aae591e87337)
+![Screenshot of terminal accessing this directory](https://github.com/user-attachments/assets/21860ebd-66c7-4945-a7ec-d3ec7f678324)
 
 Execute the following command to run the Python file:
 

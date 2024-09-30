@@ -1,12 +1,64 @@
-# ADS2-Midterm-Postfix-PP-Interpreter
+This was created in Year 2, Semester 2, of my university's CM2035 Algorithms and Data Structures 2 Midterm exam.
 
-Created as part of my university Y2S2 Midterm exam.
+# Table of Contents
 
-Video explanation/demonstration:<br>
-[Link](https://youtu.be/vBWZ51Hc-7w)
+-   [Getting Started](#getting-started)
+-   [Settings](#settings)
+-   [Preview](#preview)
 
-Image preview:<br>
-![Screenshot of Interpreter's help menu](https://github.com/user-attachments/assets/bf919cb2-c529-47f9-8293-e4f15d7f680e)
-![Screenshot of basic arithmetic calculations](https://github.com/user-attachments/assets/1d132c6f-02ae-495e-b64b-353e8e914e09)
-![Screenshot of sorting variables by its alphabet](https://github.com/user-attachments/assets/749b3dc8-394a-423e-a727-ef7d48e06cbf)
-![Screenshot of sorting variables by its value](https://github.com/user-attachments/assets/702871c4-b81a-4cb2-8b94-e1d6a8a5446a)
+# Getting Started
+
+Ensure Python is installed.
+
+You may refer to `requirements.txt` to get the exact same dependencies.
+
+Open the terminal to this directory:
+
+![Screenshot of terminal accessing this directory](image.png)
+
+Execute the following command to run the Python file:
+
+```powershell
+python '.\Postfix++ Interpreter.py'
+```
+
+# Settings
+
+Within the Python file, you may set `show_steps` to be `True` or `False`\
+to see how the lists are managing alphabets and numbers:
+
+```python
+run_postfix_pp_interpreter(show_steps=True)
+```
+
+Or
+
+```python
+run_postfix_pp_interpreter(show_steps=False)
+```
+
+# Preview
+
+[YouTube video](https://youtu.be/vBWZ51Hc-7w) for explanation and demonstration:
+
+[![Screenshot of YouTube video](image-1.png)](https://youtu.be/vBWZ51Hc-7w)
+
+Introduction screen:
+
+![Screenshot of Interpreter's introduction screen](image-2.png)
+
+Upon executing `/help` in the terminal:
+
+![Screenshot of Interpreter's help menu](image-3.png)
+
+Basic arithmetic calculations:
+
+![Screenshot of basic arithmetic calculations](image-4.png)
+
+Displaying stored variables alphabetiacally:
+
+![Screenshot of stored variables sorted alphabetically](image-5.png)
+
+Displaying stored variables sorted by their values:
+
+![Screenshot of sorting variables by its value](image-6.png)
